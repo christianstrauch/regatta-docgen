@@ -8,6 +8,7 @@ export interface AuthConfig {
   oidcUserIdClaim: string
   oidcRaceCommitteeClaim: string
   oidcCallbackUrl: string
+  oidcScope: string
 }
 
 export interface OIDCDiscovery {
@@ -29,7 +30,8 @@ export function getAuthConfig(): AuthConfig {
     oidcClientSecret: process.env.OIDC_CLIENT_SECRET || '',
     oidcUserIdClaim: process.env.OIDC_USER_ID_CLAIM || 'sub',
     oidcRaceCommitteeClaim: process.env.OIDC_RACE_COMMITTEE_CLAIM || 'org',
-    oidcCallbackUrl: process.env.OIDC_CALLBACK_URL || 'http://localhost:3000/api/auth/callback'
+    oidcCallbackUrl: process.env.OIDC_CALLBACK_URL || 'http://localhost:3000/api/auth/callback',
+    oidcScope: process.env.OIDC_SCOPE || 'openid profile email'
   }
 }
 
@@ -162,9 +164,11 @@ export async function getLoginUrl(): Promise<string> {
     client_id: config.oidcClientId,
     redirect_uri: config.oidcCallbackUrl,
     response_type: 'code',
-    scope: 'openid profile email',
+    scope: config.oidcScope,
     state: generateState()
   })
+
+  console.log('[v0] Authorization URL scope:', config.oidcScope)
 
   return `${discovery.authorization_endpoint}?${params.toString()}`
 }
