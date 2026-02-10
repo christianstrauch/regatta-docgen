@@ -73,6 +73,16 @@ export default function Page() {
     }
   }, [isAuthenticated])
 
+  // Update organizing authority when userInfo loads
+  useEffect(() => {
+    if (userInfo?.raceCommitteeName && !eventData.organizingAuthority) {
+      setEventData(prev => ({
+        ...prev,
+        organizingAuthority: userInfo.raceCommitteeName
+      }))
+    }
+  }, [userInfo?.raceCommitteeName])
+
   async function checkAuth() {
     try {
       const response = await fetch('/api/auth/status')
