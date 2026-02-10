@@ -75,12 +75,19 @@ export default function Page() {
 
   // Update organizing authority when userInfo loads
   useEffect(() => {
+    console.log('[v0] organizingAuthority effect triggered')
+    console.log('[v0] userInfo:', userInfo)
+    console.log('[v0] raceCommitteeName:', userInfo?.raceCommitteeName)
+    console.log('[v0] current organizingAuthority:', eventData.organizingAuthority)
+    
     if (userInfo?.raceCommitteeName && eventData.organizingAuthority === '') {
       console.log('[v0] Setting default organizing authority:', userInfo.raceCommitteeName)
       setEventData(prev => ({
         ...prev,
         organizingAuthority: userInfo.raceCommitteeName
       }))
+    } else {
+      console.log('[v0] Not setting organizing authority - conditions not met')
     }
   }, [userInfo?.raceCommitteeName, eventData.organizingAuthority])
 
@@ -89,12 +96,16 @@ export default function Page() {
       const response = await fetch('/api/auth/status')
       if (response.ok) {
         const data = await response.json()
+        console.log('[v0] Auth status response:', data)
         setIsAuthenticated(data.authenticated)
         setUserInfo(data.user)
+        console.log('[v0] UserInfo set to:', data.user)
       } else {
+        console.error('[v0] Auth status failed:', response.status)
         setIsAuthenticated(false)
       }
     } catch (error) {
+      console.error('[v0] Auth check error:', error)
       setIsAuthenticated(false)
     } finally {
       setIsLoading(false)
