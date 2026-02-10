@@ -9,12 +9,12 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get('error')
 
   if (error) {
-    console.error('[v0] Auth error from provider:', error)
+    console.error('Auth error from provider:', error)
     return NextResponse.redirect(new URL(`/?error=${error}`, request.url))
   }
 
   if (!code) {
-    console.error('[v0] No authorization code received')
+    console.error('No authorization code received')
     return NextResponse.redirect(new URL('/?error=no_code', request.url))
   }
 
@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
     // Decode the ID token (without verification for now, just to get claims)
     const payload = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64').toString())
 
-    console.log('[v0] ID token payload claims:', Object.keys(payload))
-    console.log('[v0] Full payload:', payload)
+    console.log('ID token payload claims:', Object.keys(payload))
+    console.log('Full payload:', payload)
 
     const userId = payload[config.oidcUserIdClaim] || payload.sub
     const userName = payload.name || 'User'
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       logoUrl = String(payload[config.oidcRaceCommitteeLogoClaim])
     }
 
-    console.log('[v0] Extracted values:', {
+    console.log('Extracted values:', {
       userId,
       userName,
       raceCommitteeName,
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     // Create or get race committee using the race committee name as the identifier
     const committee = getOrCreateRaceCommittee(raceCommitteeName, raceCommitteeName, logoUrl)
-    console.log('[v0] Race committee created/retrieved:', committee)
+    console.log('Race committee created/retrieved:', committee)
 
     // Set session cookie with the ID token
     const cookieStore = await cookies()
@@ -72,12 +72,12 @@ export async function GET(request: NextRequest) {
       path: '/',
     })
 
-    console.log('[v0] Session cookie set successfully')
-    console.log('[v0] Redirecting to home page')
+    console.log('Session cookie set successfully')
+    console.log('Redirecting to home page')
 
     return NextResponse.redirect(new URL('/', request.url))
   } catch (error) {
-    console.error('[v0] Auth callback error:', error)
+    console.error('Auth callback error:', error)
     return NextResponse.redirect(new URL('/?error=auth_failed', request.url))
   }
 }

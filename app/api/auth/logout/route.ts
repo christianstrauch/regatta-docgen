@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
   const logoutUrl = await getLogoutUrl()
   
-  console.log('[v0] Logout URL:', logoutUrl)
+  console.log('Logout URL:', logoutUrl)
   
   if (logoutUrl && logoutUrl !== '/api/auth/logout') {
     return NextResponse.redirect(logoutUrl)

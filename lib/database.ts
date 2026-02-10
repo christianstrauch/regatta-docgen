@@ -13,10 +13,10 @@ export function getDatabase() {
       const dbDir = path.dirname(dbPath)
       if (!fs.existsSync(dbDir)) {
         fs.mkdirSync(dbDir, { recursive: true })
-        console.log('[v0] Created database directory:', dbDir)
+        console.log('Created database directory:', dbDir)
       }
 
-      console.log('[v0] Connecting to database at:', dbPath)
+      console.log('Connecting to database at:', dbPath)
       db = new Database(dbPath)
       db.pragma('journal_mode = WAL')
       
@@ -24,20 +24,20 @@ export function getDatabase() {
       const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]
       const tableNames = tables.map(t => t.name)
       
-      console.log('[v0] Database tables found:', tableNames)
+      console.log('Database tables found:', tableNames)
       
       if (!tableNames.includes('race_committees') || !tableNames.includes('regatta_documents')) {
-        console.error('[v0] Database tables missing. Tables found:', tableNames)
-        console.error('[v0] Please run: pnpm db:init or node scripts/init-db.js')
+        console.error('Database tables missing. Tables found:', tableNames)
+        console.error('Please run: pnpm db:init or node scripts/init-db.js')
         throw new Error('Database not initialized. Run: pnpm db:init')
       }
 
-      console.log('[v0] Database connected successfully')
+      console.log('Database connected successfully')
     } catch (error) {
-      console.error('[v0] Database initialization error:', error)
+      console.error('Database initialization error:', error)
       if (error instanceof Error) {
-        console.error('[v0] Error message:', error.message)
-        console.error('[v0] Error stack:', error.stack)
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
       }
       // Set db to null and return null to prevent fatal errors during module initialization
       db = null
@@ -72,12 +72,12 @@ export function getRaceCommitteeByOIDC(oidcIdentifier: string): RaceCommittee | 
   try {
     const db = getDatabase()
     if (!db) {
-      console.error('[v0] Database not available')
+      console.error('Database not available')
       return undefined
     }
     return db.prepare('SELECT * FROM race_committees WHERE oidc_identifier = ?').get(oidcIdentifier) as RaceCommittee | undefined
   } catch (error) {
-    console.error('[v0] getRaceCommitteeByOIDC error:', error)
+    console.error('getRaceCommitteeByOIDC error:', error)
     return undefined
   }
 }
@@ -86,14 +86,14 @@ export function createRaceCommittee(oidcIdentifier: string, name: string, logoUr
   try {
     const db = getDatabase()
     if (!db) {
-      console.error('[v0] Database not available')
+      console.error('Database not available')
       return null
     }
     const stmt = db.prepare('INSERT INTO race_committees (oidc_identifier, name, logo_url) VALUES (?, ?, ?)')
     const result = stmt.run(oidcIdentifier, name, logoUrl || null)
     return getRaceCommitteeByOIDC(oidcIdentifier) || null
   } catch (error) {
-    console.error('[v0] createRaceCommittee error:', error)
+    console.error('createRaceCommittee error:', error)
     return null
   }
 }
@@ -102,14 +102,14 @@ export function updateRaceCommitteeLogo(oidcIdentifier: string, logoUrl: string)
   try {
     const db = getDatabase()
     if (!db) {
-      console.error('[v0] Database not available')
+      console.error('Database not available')
       return false
     }
     const stmt = db.prepare('UPDATE race_committees SET logo_url = ?, updated_at = CURRENT_TIMESTAMP WHERE oidc_identifier = ?')
     stmt.run(logoUrl, oidcIdentifier)
     return true
   } catch (error) {
-    console.error('[v0] updateRaceCommitteeLogo error:', error)
+    console.error('updateRaceCommitteeLogo error:', error)
     return false
   }
 }
@@ -126,7 +126,7 @@ export function getOrCreateRaceCommittee(oidcIdentifier: string, name: string, l
     }
     return committee || null
   } catch (error) {
-    console.error('[v0] getOrCreateRaceCommittee error:', error)
+    console.error('getOrCreateRaceCommittee error:', error)
     return null
   }
 }
@@ -135,12 +135,12 @@ export function getRegattaDocuments(raceCommitteeId: number): RegattaDocument[] 
   try {
     const db = getDatabase()
     if (!db) {
-      console.error('[v0] Database not available')
+      console.error('Database not available')
       return []
     }
     return db.prepare('SELECT * FROM regatta_documents WHERE race_committee_id = ? ORDER BY updated_at DESC').all(raceCommitteeId) as RegattaDocument[]
   } catch (error) {
-    console.error('[v0] getRegattaDocuments error:', error)
+    console.error('getRegattaDocuments error:', error)
     return []
   }
 }
@@ -149,12 +149,12 @@ export function getRegattaDocument(id: number, raceCommitteeId: number): Regatta
   try {
     const db = getDatabase()
     if (!db) {
-      console.error('[v0] Database not available')
+      console.error('Database not available')
       return undefined
     }
     return db.prepare('SELECT * FROM regatta_documents WHERE id = ? AND race_committee_id = ?').get(id, raceCommitteeId) as RegattaDocument | undefined
   } catch (error) {
-    console.error('[v0] getRegattaDocument error:', error)
+    console.error('getRegattaDocument error:', error)
     return undefined
   }
 }
@@ -170,7 +170,7 @@ export function createRegattaDocument(
   try {
     const db = getDatabase()
     if (!db) {
-      console.error('[v0] Database not available')
+      console.error('Database not available')
       return null
     }
     const stmt = db.prepare(`
@@ -180,7 +180,7 @@ export function createRegattaDocument(
     const result = stmt.run(raceCommitteeId, title, eventDetails, selectedRules, customSections, fleets)
     return getRegattaDocument(Number(result.lastInsertRowid), raceCommitteeId) || null
   } catch (error) {
-    console.error('[v0] createRegattaDocument error:', error)
+    console.error('createRegattaDocument error:', error)
     return null
   }
 }
@@ -197,7 +197,7 @@ export function updateRegattaDocument(
   try {
     const db = getDatabase()
     if (!db) {
-      console.error('[v0] Database not available')
+      console.error('Database not available')
       return undefined
     }
     const stmt = db.prepare(`
@@ -208,7 +208,7 @@ export function updateRegattaDocument(
     stmt.run(title, eventDetails, selectedRules, customSections, fleets, id, raceCommitteeId)
     return getRegattaDocument(id, raceCommitteeId)
   } catch (error) {
-    console.error('[v0] updateRegattaDocument error:', error)
+    console.error('updateRegattaDocument error:', error)
     return undefined
   }
 }
@@ -217,14 +217,14 @@ export function deleteRegattaDocument(id: number, raceCommitteeId: number): bool
   try {
     const db = getDatabase()
     if (!db) {
-      console.error('[v0] Database not available')
+      console.error('Database not available')
       return false
     }
     const stmt = db.prepare('DELETE FROM regatta_documents WHERE id = ? AND race_committee_id = ?')
     const result = stmt.run(id, raceCommitteeId)
     return result.changes > 0
   } catch (error) {
-    console.error('[v0] deleteRegattaDocument error:', error)
+    console.error('deleteRegattaDocument error:', error)
     return false
   }
 }

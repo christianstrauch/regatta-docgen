@@ -75,19 +75,19 @@ export default function Page() {
 
   // Update organizing authority when userInfo loads
   useEffect(() => {
-    console.log('[v0] organizingAuthority effect triggered')
-    console.log('[v0] userInfo:', userInfo)
-    console.log('[v0] raceCommitteeName:', userInfo?.raceCommitteeName)
-    console.log('[v0] current organizingAuthority:', eventData.organizingAuthority)
+    console.log('organizingAuthority effect triggered')
+    console.log('userInfo:', userInfo)
+    console.log('raceCommitteeName:', userInfo?.raceCommitteeName)
+    console.log('current organizingAuthority:', eventData.organizingAuthority)
     
     if (userInfo?.raceCommitteeName && eventData.organizingAuthority === '') {
-      console.log('[v0] Setting default organizing authority:', userInfo.raceCommitteeName)
+      console.log('Setting default organizing authority:', userInfo.raceCommitteeName)
       setEventData(prev => ({
         ...prev,
         organizingAuthority: userInfo.raceCommitteeName
       }))
     } else {
-      console.log('[v0] Not setting organizing authority - conditions not met')
+      console.log('Not setting organizing authority - conditions not met')
     }
   }, [userInfo?.raceCommitteeName, eventData.organizingAuthority])
 
@@ -96,20 +96,20 @@ export default function Page() {
       const response = await fetch('/api/auth/status')
       if (response.ok) {
         const data = await response.json()
-        console.log('[v0] Auth status response:', data)
+        console.log('Auth status response:', data)
         setIsAuthenticated(data.authenticated)
         setUserInfo(data.user)
         // Set logo from user's race committee
         if (data.user?.raceCommitteeLogo) {
           setLogoUrl(data.user.raceCommitteeLogo)
         }
-        console.log('[v0] UserInfo set to:', data.user)
+        console.log('UserInfo set to:', data.user)
       } else {
-        console.error('[v0] Auth status failed:', response.status)
+        console.error('Auth status failed:', response.status)
         setIsAuthenticated(false)
       }
     } catch (error) {
-      console.error('[v0] Auth check error:', error)
+      console.error('Auth check error:', error)
       setIsAuthenticated(false)
     } finally {
       setIsLoading(false)
@@ -127,7 +127,7 @@ export default function Page() {
         }
       }
     } catch (error) {
-      console.error('[v0] Failed to load config:', error)
+      console.error('Failed to load config:', error)
     }
   }
 
@@ -139,7 +139,7 @@ export default function Page() {
         setDocuments(data.documents || [])
       }
     } catch (error) {
-      console.error('[v0] Failed to load documents:', error)
+      console.error('Failed to load documents:', error)
       toast.error('Failed to load documents')
     }
   }
@@ -161,7 +161,7 @@ export default function Page() {
         fleetProvisions
       }
 
-      console.log('[v0] Saving document data:', documentData)
+      console.log('Saving document data:', documentData)
 
       const url = currentDocId 
         ? `/api/documents/${currentDocId}` 
@@ -175,21 +175,21 @@ export default function Page() {
         body: JSON.stringify(documentData)
       })
 
-      console.log('[v0] Save response status:', response.status)
+      console.log('Save response status:', response.status)
 
       if (response.ok) {
         const data = await response.json()
-        console.log('[v0] Save response data:', data)
+        console.log('Save response data:', data)
         setCurrentDocId(data.document.id)
         toast.success(currentDocId ? 'Race document set updated' : 'Race document set saved')
         loadDocuments()
       } else {
         const errorData = await response.json()
-        console.error('[v0] Save failed:', errorData)
+        console.error('Save failed:', errorData)
         toast.error(`Failed to save race document set: ${errorData.details || errorData.error}`)
       }
     } catch (error) {
-      console.error('[v0] Save error:', error)
+      console.error('Save error:', error)
       toast.error('Failed to save race document set')
     }
   }
@@ -215,7 +215,7 @@ export default function Page() {
         toast.error('Failed to load race document set')
       }
     } catch (error) {
-      console.error('[v0] Load error:', error)
+      console.error('Load error:', error)
       toast.error('Failed to load race document set')
     }
   }

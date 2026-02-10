@@ -50,11 +50,11 @@ export async function getOIDCDiscovery(): Promise<OIDCDiscovery | null> {
 
   try {
     const discoveryUrl = `${config.oidcIssuer}/.well-known/openid-configuration`
-    console.log('[v0] Fetching OIDC discovery from:', discoveryUrl)
+    console.log('Fetching OIDC discovery from:', discoveryUrl)
     
     const response = await fetch(discoveryUrl)
     if (!response.ok) {
-      console.error('[v0] OIDC discovery failed:', response.status, response.statusText)
+      console.error('OIDC discovery failed:', response.status, response.statusText)
       return null
     }
 
@@ -64,7 +64,7 @@ export async function getOIDCDiscovery(): Promise<OIDCDiscovery | null> {
     cachedDiscovery = discovery
     discoveryExpiry = Date.now() + (60 * 60 * 1000)
     
-    console.log('[v0] OIDC discovery successful:', {
+    console.log('OIDC discovery successful:', {
       issuer: discovery.issuer,
       authorization_endpoint: discovery.authorization_endpoint,
       token_endpoint: discovery.token_endpoint
@@ -72,7 +72,7 @@ export async function getOIDCDiscovery(): Promise<OIDCDiscovery | null> {
     
     return discovery
   } catch (error) {
-    console.error('[v0] OIDC discovery error:', error)
+    console.error('OIDC discovery error:', error)
     return null
   }
 }
@@ -90,7 +90,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     const discovery = await getOIDCDiscovery()
     
     if (!discovery) {
-      console.error('[v0] Cannot verify token: OIDC discovery failed')
+      console.error('Cannot verify token: OIDC discovery failed')
       return null
     }
 
@@ -103,7 +103,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 
     return payload
   } catch (error) {
-    console.error('[v0] Token verification failed:', error)
+    console.error('Token verification failed:', error)
     return null
   }
 }
@@ -113,16 +113,16 @@ export async function getUserSession(): Promise<UserSession | null> {
     const cookieStore = await cookies()
     const sessionToken = cookieStore.get('session_token')?.value
 
-    console.log('[v0] getUserSession - Has token:', !!sessionToken)
+    console.log('getUserSession - Has token:', !!sessionToken)
 
     if (!sessionToken) {
-      console.log('[v0] No session token found in cookies')
+      console.log('No session token found in cookies')
       return null
     }
 
     const payload = await verifyToken(sessionToken)
     if (!payload) {
-      console.log('[v0] Token verification failed - payload is null')
+      console.log('Token verification failed - payload is null')
       return null
     }
 
@@ -135,7 +135,7 @@ export async function getUserSession(): Promise<UserSession | null> {
       email: String(payload.email || '')
     }
 
-    console.log('[v0] Session created:', {
+    console.log('Session created:', {
       userId: session.userId,
       raceCommitteeId: session.raceCommitteeId,
       hasName: !!session.name,
@@ -143,12 +143,12 @@ export async function getUserSession(): Promise<UserSession | null> {
     })
 
     if (!session.raceCommitteeId) {
-      console.error('[v0] Warning: No race committee ID in session')
+      console.error('Warning: No race committee ID in session')
     }
     
     return session
   } catch (error) {
-    console.error('[v0] Session verification failed:', error)
+    console.error('Session verification failed:', error)
     return null
   }
 }
@@ -158,7 +158,7 @@ export async function getLoginUrl(): Promise<string> {
   const discovery = await getOIDCDiscovery()
   
   if (!discovery) {
-    console.error('[v0] Cannot generate login URL: OIDC discovery failed')
+    console.error('Cannot generate login URL: OIDC discovery failed')
     return ''
   }
 
@@ -170,7 +170,7 @@ export async function getLoginUrl(): Promise<string> {
     state: generateState()
   })
 
-  console.log('[v0] Authorization URL scope:', config.oidcScope)
+  console.log('Authorization URL scope:', config.oidcScope)
 
   return `${discovery.authorization_endpoint}?${params.toString()}`
 }
@@ -201,7 +201,7 @@ export async function exchangeCodeForToken(code: string): Promise<any> {
     client_secret: config.oidcClientSecret
   })
 
-  console.log('[v0] Exchanging code for token at:', discovery.token_endpoint)
+  console.log('Exchanging code for token at:', discovery.token_endpoint)
   
   const response = await fetch(discovery.token_endpoint, {
     method: 'POST',
@@ -213,7 +213,7 @@ export async function exchangeCodeForToken(code: string): Promise<any> {
 
   if (!response.ok) {
     const errorText = await response.text()
-    console.error('[v0] Token exchange failed:', response.status, errorText)
+    console.error('Token exchange failed:', response.status, errorText)
     throw new Error(`Token exchange failed: ${response.status}`)
   }
 

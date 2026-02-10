@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const session = await getUserSession()
     
-    console.log('[v0] Auth status check - Session:', session)
+    console.log('Auth status check - Session:', session)
     
     if (session) {
       let committeeName = session.raceCommitteeId // Default to the ID itself
@@ -14,7 +14,7 @@ export async function GET() {
       
       try {
         const committee = getRaceCommitteeByOIDC(session.raceCommitteeId)
-        console.log('[v0] Race committee lookup result:', committee)
+        console.log('Race committee lookup result:', committee)
         
         if (committee?.name) {
           committeeName = committee.name
@@ -24,7 +24,7 @@ export async function GET() {
           committeeLogo = committee.logo_url
         }
       } catch (dbError) {
-        console.error('[v0] Database error getting committee:', dbError)
+        console.error('Database error getting committee:', dbError)
         // Continue with committeeName = raceCommitteeId and default logo
       }
       
@@ -40,15 +40,15 @@ export async function GET() {
         }
       }
       
-      console.log('[v0] Auth status response:', userResponse)
+      console.log('Auth status response:', userResponse)
       
       return NextResponse.json(userResponse)
     }
 
-    console.log('[v0] No session found')
+    console.log('No session found')
     return NextResponse.json({ authenticated: false })
   } catch (error) {
-    console.error('[v0] Auth status error:', error)
+    console.error('Auth status error:', error)
     return NextResponse.json({ authenticated: false }, { status: 500 })
   }
 }

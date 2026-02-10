@@ -96,7 +96,7 @@ export default function Page() {
         setLogoUrl(data.logoUrl || '')
       }
     } catch (error) {
-      console.error('[v0] Failed to load config:', error)
+      console.error('Failed to load config:', error)
     }
   }
 
@@ -108,7 +108,7 @@ export default function Page() {
         setDocuments(data.documents || [])
       }
     } catch (error) {
-      console.error('[v0] Failed to load documents:', error)
+      console.error('Failed to load documents:', error)
       toast.error('Failed to load documents')
     }
   }
@@ -151,7 +151,7 @@ export default function Page() {
         toast.error('Failed to save document')
       }
     } catch (error) {
-      console.error('[v0] Save error:', error)
+      console.error('Save error:', error)
       toast.error('Failed to save document')
     }
   }
@@ -175,7 +175,7 @@ export default function Page() {
         toast.error('Failed to load document')
       }
     } catch (error) {
-      console.error('[v0] Load error:', error)
+      console.error('Load error:', error)
       toast.error('Failed to load document')
     }
   }

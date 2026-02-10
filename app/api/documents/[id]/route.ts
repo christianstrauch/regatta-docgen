@@ -32,7 +32,7 @@ export async function GET(
 
     return NextResponse.json({ document })
   } catch (error) {
-    console.error('[v0] Get document error:', error)
+    console.error('Get document error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -73,7 +73,7 @@ export async function PUT(
 
     return NextResponse.json({ document })
   } catch (error) {
-    console.error('[v0] Update document error:', error)
+    console.error('Update document error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -103,7 +103,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[v0] Delete document error:', error)
+    console.error('Delete document error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
