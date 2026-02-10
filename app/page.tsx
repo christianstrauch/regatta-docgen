@@ -99,6 +99,10 @@ export default function Page() {
         console.log('[v0] Auth status response:', data)
         setIsAuthenticated(data.authenticated)
         setUserInfo(data.user)
+        // Set logo from user's race committee
+        if (data.user?.raceCommitteeLogo) {
+          setLogoUrl(data.user.raceCommitteeLogo)
+        }
         console.log('[v0] UserInfo set to:', data.user)
       } else {
         console.error('[v0] Auth status failed:', response.status)
@@ -117,7 +121,10 @@ export default function Page() {
       const response = await fetch('/api/config')
       if (response.ok) {
         const data = await response.json()
-        setLogoUrl(data.logoUrl || '')
+        // Only set logo from config if not already set from user session
+        if (!logoUrl && data.logoUrl) {
+          setLogoUrl(data.logoUrl)
+        }
       }
     } catch (error) {
       console.error('[v0] Failed to load config:', error)
