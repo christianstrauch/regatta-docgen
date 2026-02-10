@@ -105,27 +105,44 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 }
 
 export async function getUserSession(): Promise<UserSession | null> {
-  const cookieStore = await cookies()
-  const sessionToken = cookieStore.get('session_token')?.value
-
-  if (!sessionToken) {
-    return null
-  }
-
   try {
+    const cookieStore = await cookies()
+    const sessionToken = cookieStore.get('session_token')?.value
+
+    console.log('[v0] getUserSession - Has token:', !!sessionToken)
+
+    if (!sessionToken) {
+      console.log('[v0] No session token found in cookies')
+      return null
+    }
+
     const payload = await verifyToken(sessionToken)
     if (!payload) {
+      console.log('[v0] Token verification failed - payload is null')
       return null
     }
 
     const config = getAuthConfig()
     
-    return {
+    const session = {
       userId: String(payload[config.oidcUserIdClaim] || payload.sub),
       raceCommitteeId: String(payload[config.oidcRaceCommitteeClaim] || ''),
       name: String(payload.name || ''),
       email: String(payload.email || '')
     }
+
+    console.log('[v0] Session created:', {
+      userId: session.userId,
+      raceCommitteeId: session.raceCommitteeId,
+      hasName: !!session.name,
+      hasEmail: !!session.email
+    })
+
+    if (!session.raceCommitteeId) {
+      console.error('[v0] Warning: No race committee ID in session')
+    }
+    
+    return session
   } catch (error) {
     console.error('[v0] Session verification failed:', error)
     return null
