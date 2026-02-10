@@ -40,18 +40,26 @@ export async function GET(request: NextRequest) {
     
     // The race committee claim contains the ACTUAL race committee name
     const raceCommitteeName = payload[config.oidcRaceCommitteeClaim] || 'Default Race Committee'
+    
+    // Extract logo URL if the claim is configured
+    let logoUrl: string | undefined
+    if (config.oidcRaceCommitteeLogoClaim && payload[config.oidcRaceCommitteeLogoClaim]) {
+      logoUrl = String(payload[config.oidcRaceCommitteeLogoClaim])
+    }
 
     console.log('[v0] Extracted values:', {
       userId,
       userName,
       raceCommitteeName,
+      logoUrl,
       userIdClaim: config.oidcUserIdClaim,
       raceCommitteeClaim: config.oidcRaceCommitteeClaim,
+      logoClaimName: config.oidcRaceCommitteeLogoClaim,
       claimValue: payload[config.oidcRaceCommitteeClaim]
     })
 
     // Create or get race committee using the race committee name as the identifier
-    const committee = getOrCreateRaceCommittee(raceCommitteeName, raceCommitteeName)
+    const committee = getOrCreateRaceCommittee(raceCommitteeName, raceCommitteeName, logoUrl)
     console.log('[v0] Race committee created/retrieved:', committee)
 
     // Set session cookie with the ID token
