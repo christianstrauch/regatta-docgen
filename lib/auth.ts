@@ -10,6 +10,18 @@ export interface AuthConfig {
   oidcCallbackUrl: string
 }
 
+export interface OIDCDiscovery {
+  authorization_endpoint: string
+  token_endpoint: string
+  userinfo_endpoint: string
+  jwks_uri: string
+  end_session_endpoint?: string
+  issuer: string
+}
+
+let cachedDiscovery: OIDCDiscovery | null = null
+let discoveryExpiry: number = 0
+
 export function getAuthConfig(): AuthConfig {
   return {
     oidcIssuer: process.env.OIDC_ISSUER || '',
@@ -18,6 +30,46 @@ export function getAuthConfig(): AuthConfig {
     oidcUserIdClaim: process.env.OIDC_USER_ID_CLAIM || 'sub',
     oidcRaceCommitteeClaim: process.env.OIDC_RACE_COMMITTEE_CLAIM || 'org',
     oidcCallbackUrl: process.env.OIDC_CALLBACK_URL || 'http://localhost:3000/api/auth/callback'
+  }
+}
+
+export async function getOIDCDiscovery(): Promise<OIDCDiscovery | null> {
+  const config = getAuthConfig()
+  if (!config.oidcIssuer) {
+    return null
+  }
+
+  // Return cached discovery if still valid (cache for 1 hour)
+  if (cachedDiscovery && Date.now() < discoveryExpiry) {
+    return cachedDiscovery
+  }
+
+  try {
+    const discoveryUrl = `${config.oidcIssuer}/.well-known/openid-configuration`
+    console.log('[v0] Fetching OIDC discovery from:', discoveryUrl)
+    
+    const response = await fetch(discoveryUrl)
+    if (!response.ok) {
+      console.error('[v0] OIDC discovery failed:', response.status, response.statusText)
+      return null
+    }
+
+    const discovery: OIDCDiscovery = await response.json()
+    
+    // Cache the discovery for 1 hour
+    cachedDiscovery = discovery
+    discoveryExpiry = Date.now() + (60 * 60 * 1000)
+    
+    console.log('[v0] OIDC discovery successful:', {
+      issuer: discovery.issuer,
+      authorization_endpoint: discovery.authorization_endpoint,
+      token_endpoint: discovery.token_endpoint
+    })
+    
+    return discovery
+  } catch (error) {
+    console.error('[v0] OIDC discovery error:', error)
+    return null
   }
 }
 
@@ -31,14 +83,17 @@ export interface UserSession {
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const config = getAuthConfig()
-    if (!config.oidcIssuer) {
+    const discovery = await getOIDCDiscovery()
+    
+    if (!discovery) {
+      console.error('[v0] Cannot verify token: OIDC discovery failed')
       return null
     }
 
-    const JWKS = createRemoteJWKSet(new URL(`${config.oidcIssuer}/.well-known/jwks.json`))
+    const JWKS = createRemoteJWKSet(new URL(discovery.jwks_uri))
     
     const { payload } = await jwtVerify(token, JWKS, {
-      issuer: config.oidcIssuer,
+      issuer: discovery.issuer,
       audience: config.oidcClientId,
     })
 
@@ -77,9 +132,12 @@ export async function getUserSession(): Promise<UserSession | null> {
   }
 }
 
-export function getLoginUrl(): string {
+export async function getLoginUrl(): Promise<string> {
   const config = getAuthConfig()
-  if (!config.oidcIssuer) {
+  const discovery = await getOIDCDiscovery()
+  
+  if (!discovery) {
+    console.error('[v0] Cannot generate login URL: OIDC discovery failed')
     return ''
   }
 
@@ -88,16 +146,57 @@ export function getLoginUrl(): string {
     redirect_uri: config.oidcCallbackUrl,
     response_type: 'code',
     scope: 'openid profile email',
+    state: generateState()
   })
 
-  return `${config.oidcIssuer}/authorize?${params.toString()}`
+  return `${discovery.authorization_endpoint}?${params.toString()}`
 }
 
-export function getLogoutUrl(): string {
-  const config = getAuthConfig()
-  if (!config.oidcIssuer) {
+export async function getLogoutUrl(): Promise<string> {
+  const discovery = await getOIDCDiscovery()
+  
+  if (!discovery?.end_session_endpoint) {
     return '/api/auth/logout'
   }
 
-  return `${config.oidcIssuer}/logout`
+  return discovery.end_session_endpoint
+}
+
+export async function exchangeCodeForToken(code: string): Promise<any> {
+  const config = getAuthConfig()
+  const discovery = await getOIDCDiscovery()
+  
+  if (!discovery) {
+    throw new Error('OIDC discovery failed')
+  }
+
+  const params = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: config.oidcCallbackUrl,
+    client_id: config.oidcClientId,
+    client_secret: config.oidcClientSecret
+  })
+
+  console.log('[v0] Exchanging code for token at:', discovery.token_endpoint)
+  
+  const response = await fetch(discovery.token_endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString()
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('[v0] Token exchange failed:', response.status, errorText)
+    throw new Error(`Token exchange failed: ${response.status}`)
+  }
+
+  return response.json()
+}
+
+function generateState(): string {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 }

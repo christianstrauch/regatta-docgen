@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthConfig } from '@/lib/auth'
+import { getAuthConfig, exchangeCodeForToken } from '@/lib/auth'
 import { getOrCreateRaceCommittee } from '@/lib/database'
 import { cookies } from 'next/headers'
 
@@ -9,37 +9,25 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get('error')
 
   if (error) {
+    console.error('[v0] Auth error from provider:', error)
     return NextResponse.redirect(new URL(`/?error=${error}`, request.url))
   }
 
   if (!code) {
+    console.error('[v0] No authorization code received')
     return NextResponse.redirect(new URL('/?error=no_code', request.url))
   }
 
   try {
     const config = getAuthConfig()
 
-    // Exchange code for token
-    const tokenResponse = await fetch(`${config.oidcIssuer}/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: config.oidcCallbackUrl,
-        client_id: config.oidcClientId,
-        client_secret: config.oidcClientSecret,
-      }),
-    })
-
-    if (!tokenResponse.ok) {
-      throw new Error('Failed to exchange code for token')
-    }
-
-    const tokens = await tokenResponse.json()
+    // Exchange code for token using the proper OIDC token endpoint
+    const tokens = await exchangeCodeForToken(code)
     const idToken = tokens.id_token
+
+    if (!idToken) {
+      throw new Error('No ID token received from provider')
+    }
 
     // Decode the ID token (without verification for now, just to get claims)
     const payload = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64').toString())

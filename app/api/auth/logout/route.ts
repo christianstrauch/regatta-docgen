@@ -6,7 +6,9 @@ export async function GET(request: NextRequest) {
   const cookieStore = await cookies()
   cookieStore.delete('session_token')
 
-  const logoutUrl = getLogoutUrl()
+  const logoutUrl = await getLogoutUrl()
+  
+  console.log('[v0] Logout URL:', logoutUrl)
   
   if (logoutUrl && logoutUrl !== '/api/auth/logout') {
     return NextResponse.redirect(logoutUrl)
