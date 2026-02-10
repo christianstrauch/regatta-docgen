@@ -32,12 +32,23 @@ export async function GET(request: NextRequest) {
     // Decode the ID token (without verification for now, just to get claims)
     const payload = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64').toString())
 
+    console.log('[v0] ID token payload claims:', Object.keys(payload))
+
     const userId = payload[config.oidcUserIdClaim] || payload.sub
     const raceCommitteeId = payload[config.oidcRaceCommitteeClaim] || 'default'
     const name = payload.name || 'Race Committee'
 
+    console.log('[v0] Extracted values:', {
+      userId,
+      raceCommitteeId,
+      name,
+      userIdClaim: config.oidcUserIdClaim,
+      raceCommitteeClaim: config.oidcRaceCommitteeClaim
+    })
+
     // Create or get race committee
-    getOrCreateRaceCommittee(raceCommitteeId, name)
+    const committee = getOrCreateRaceCommittee(raceCommitteeId, name)
+    console.log('[v0] Race committee created/retrieved:', committee)
 
     // Set session cookie with the ID token
     const cookieStore = await cookies()
@@ -48,6 +59,9 @@ export async function GET(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
     })
+
+    console.log('[v0] Session cookie set successfully')
+    console.log('[v0] Redirecting to home page')
 
     return NextResponse.redirect(new URL('/', request.url))
   } catch (error) {
