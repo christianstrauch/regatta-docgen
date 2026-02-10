@@ -214,14 +214,17 @@ export function updateRegattaDocument(
 }
 
 export function deleteRegattaDocument(id: number, raceCommitteeId: number): boolean {
-  const db = getDatabase()
-  const stmt = db.prepare('DELETE FROM regatta_documents WHERE id = ? AND race_committee_id = ?')
-  const result = stmt.run(id, raceCommitteeId)
-  return result.changes > 0
-}
-
-export function updateRaceCommitteeLogo(oidcIdentifier: string, logoUrl: string): void {
-  const db = getDatabase()
-  const stmt = db.prepare('UPDATE race_committees SET logo_url = ?, updated_at = CURRENT_TIMESTAMP WHERE oidc_identifier = ?')
-  stmt.run(logoUrl, oidcIdentifier)
+  try {
+    const db = getDatabase()
+    if (!db) {
+      console.error('[v0] Database not available')
+      return false
+    }
+    const stmt = db.prepare('DELETE FROM regatta_documents WHERE id = ? AND race_committee_id = ?')
+    const result = stmt.run(id, raceCommitteeId)
+    return result.changes > 0
+  } catch (error) {
+    console.error('[v0] deleteRegattaDocument error:', error)
+    return false
+  }
 }
