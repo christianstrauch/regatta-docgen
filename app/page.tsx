@@ -75,13 +75,14 @@ export default function Page() {
 
   // Update organizing authority when userInfo loads
   useEffect(() => {
-    if (userInfo?.raceCommitteeName && !eventData.organizingAuthority) {
+    if (userInfo?.raceCommitteeName && eventData.organizingAuthority === '') {
+      console.log('[v0] Setting default organizing authority:', userInfo.raceCommitteeName)
       setEventData(prev => ({
         ...prev,
         organizingAuthority: userInfo.raceCommitteeName
       }))
     }
-  }, [userInfo?.raceCommitteeName])
+  }, [userInfo?.raceCommitteeName, eventData.organizingAuthority])
 
   async function checkAuth() {
     try {
@@ -288,7 +289,9 @@ export default function Page() {
               <div>
                 <h1 className="text-xl font-bold tracking-tight">regatta.club Document Generator</h1>
                 <p className="text-xs text-muted-foreground">
-                  {userInfo?.raceCommitteeName || userInfo?.name || 'Race Committee'}
+                  {userInfo?.raceCommitteeName && userInfo?.name 
+                    ? `${userInfo.raceCommitteeName} / ${userInfo.name}`
+                    : userInfo?.raceCommitteeName || userInfo?.name || 'Race Committee'}
                 </p>
               </div>
             </div>
