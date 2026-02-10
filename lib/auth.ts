@@ -7,6 +7,7 @@ export interface AuthConfig {
   oidcClientSecret: string
   oidcUserIdClaim: string
   oidcRaceCommitteeClaim: string
+  oidcRaceCommitteeLogoClaim: string
   oidcCallbackUrl: string
   oidcScope: string
 }
@@ -30,6 +31,7 @@ export function getAuthConfig(): AuthConfig {
     oidcClientSecret: process.env.OIDC_CLIENT_SECRET || '',
     oidcUserIdClaim: process.env.OIDC_USER_ID_CLAIM || 'sub',
     oidcRaceCommitteeClaim: process.env.OIDC_RACE_COMMITTEE_CLAIM || 'org',
+    oidcRaceCommitteeLogoClaim: process.env.OIDC_RACE_COMMITTEE_LOGO_CLAIM || '',
     oidcCallbackUrl: process.env.OIDC_CALLBACK_URL || 'http://localhost:3000/api/auth/callback',
     oidcScope: process.env.OIDC_SCOPE || 'openid profile email'
   }
