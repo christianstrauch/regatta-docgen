@@ -33,21 +33,25 @@ export async function GET(request: NextRequest) {
     const payload = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64').toString())
 
     console.log('[v0] ID token payload claims:', Object.keys(payload))
+    console.log('[v0] Full payload:', payload)
 
     const userId = payload[config.oidcUserIdClaim] || payload.sub
-    const raceCommitteeId = payload[config.oidcRaceCommitteeClaim] || 'default'
-    const name = payload.name || 'Race Committee'
+    const userName = payload.name || 'User'
+    
+    // The race committee claim contains the ACTUAL race committee name
+    const raceCommitteeName = payload[config.oidcRaceCommitteeClaim] || 'Default Race Committee'
 
     console.log('[v0] Extracted values:', {
       userId,
-      raceCommitteeId,
-      name,
+      userName,
+      raceCommitteeName,
       userIdClaim: config.oidcUserIdClaim,
-      raceCommitteeClaim: config.oidcRaceCommitteeClaim
+      raceCommitteeClaim: config.oidcRaceCommitteeClaim,
+      claimValue: payload[config.oidcRaceCommitteeClaim]
     })
 
-    // Create or get race committee
-    const committee = getOrCreateRaceCommittee(raceCommitteeId, name)
+    // Create or get race committee using the race committee name as the identifier
+    const committee = getOrCreateRaceCommittee(raceCommitteeName, raceCommitteeName)
     console.log('[v0] Race committee created/retrieved:', committee)
 
     // Set session cookie with the ID token
