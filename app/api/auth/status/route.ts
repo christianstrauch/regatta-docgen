@@ -10,6 +10,7 @@ export async function GET() {
     
     if (session) {
       let committeeName = session.raceCommitteeId // Default to the ID itself
+      let committeeLogo = process.env.LOGO_URL || '' // Default fallback logo
       
       try {
         const committee = getRaceCommitteeByOIDC(session.raceCommitteeId)
@@ -18,9 +19,13 @@ export async function GET() {
         if (committee?.name) {
           committeeName = committee.name
         }
+        // Use committee-specific logo if available, otherwise keep default
+        if (committee?.logo_url) {
+          committeeLogo = committee.logo_url
+        }
       } catch (dbError) {
         console.error('[v0] Database error getting committee:', dbError)
-        // Continue with committeeName = raceCommitteeId
+        // Continue with committeeName = raceCommitteeId and default logo
       }
       
       const userResponse = {
@@ -30,7 +35,8 @@ export async function GET() {
           name: session.name,
           email: session.email,
           raceCommitteeId: session.raceCommitteeId,
-          raceCommitteeName: committeeName
+          raceCommitteeName: committeeName,
+          raceCommitteeLogo: committeeLogo
         }
       }
       
